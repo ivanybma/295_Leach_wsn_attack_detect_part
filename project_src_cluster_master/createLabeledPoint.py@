@@ -1,0 +1,37 @@
+from pyspark import SparkConf, SparkContext
+import urllib.request
+import urllib
+from pyspark.mllib.regression import LabeledPoint
+from numpy import array
+from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
+from time import time
+
+sc = SparkContext.getOrCreate()
+data_file = "./kddcup.data_10_percent.gz"
+raw_data = sc.textFile(data_file)
+csv_data = raw_data.map(lambda x: x.split(","))
+protocols = csv_data.map(lambda x: x[1]).distinct().collect()
+services = csv_data.map(lambda x: x[2]).distinct().collect()
+flags = csv_data.map(lambda x: x[3]).distinct().collect()
+def create_labeled_point(line_split):
+        clean_line_split = line_split[0:41]
+        # convert protocol to numeric categorical variable
+        try:
+                clean_line_split[1] = protocols.index(clean_line_split[1])
+        except:
+                clean_line_split[1] = len(protocols)
+        # convert service to numeric categorical variable
+        try:
+                clean_line_split[2] = services.index(clean_line_split[2])
+        except:
+                clean_line_split[2] = len(services)
+                # convert flag to numeric categorical variable
+        try:
+                clean_line_split[3] = flags.index(clean_line_split[3])
+        except:
+                clean_line_split[3] = len(flags)
+        # convert label to binary label
+        attack = 1.0
+        if line_split[41]=='normal.':
+                attack = 0.0
+        return LabeledPoint(attack, array([float(x) for x in clean_line_split]))
