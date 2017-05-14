@@ -1,0 +1,1 @@
+select * from chkrst_history where timestamp >='20170508000000' and timestamp <='20170509999999'
